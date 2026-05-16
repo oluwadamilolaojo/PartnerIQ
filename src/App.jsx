@@ -331,6 +331,8 @@ function CandidateRow({ candidate, active, onClick, archived }) {
 
 function CandidateView({ candidate, onUpdate, onArchive, selfScores }) {
   const [tab, setTab] = useState("profile");
+
+  useEffect(() => { setTab("profile"); }, [candidate.id]);
   const score = computeScore(candidate);
   const verdict = getVerdict(score);
   const phase = HDD_PHASES.find(p => p.id === candidate.currentPhase);
@@ -412,6 +414,11 @@ function ProfileTab({ candidate, onUpdate, onArchive }) {
   const [howMet, setHowMet] = useState(candidate.howMet);
   const [name, setName] = useState(candidate.name);
 
+  useEffect(() => {
+    setName(candidate.name);
+    setHowMet(candidate.howMet);
+  }, [candidate.id]);
+
   function save() { onUpdate({ ...candidate, name: name.trim() || candidate.name, howMet }); }
 
   return (
@@ -484,6 +491,15 @@ function PhaseTab({ candidate, onUpdate }) {
   const [refute, setRefute] = useState(current.refute);
   const [editing, setEditing] = useState(!current.lockedAt);
   const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    const key = `phase_${HDD_PHASES.find(p => p.id === candidate.currentPhase)?.id}`;
+    const c = candidate.criteria[key] || { confirm: "", refute: "", lockedAt: null };
+    setConfirm(c.confirm);
+    setRefute(c.refute);
+    setEditing(!c.lockedAt);
+    setShowHistory(false);
+  }, [candidate.id, candidate.currentPhase]);
 
   function lock() {
     if (!confirm.trim() || !refute.trim()) { alert("Both confirmation and refutation criteria must be written before locking."); return; }
@@ -1139,7 +1155,7 @@ export default function App() {
     <div style={{ display: "flex", height: "100vh", background: "#F4F6FA", fontFamily: "Calibri, sans-serif" }}>
       <Sidebar candidates={state.candidates} activeId={state.activeId} onSelect={selectCandidate} onAdd={addCandidate} onShowSelf={() => setShowSelf(true)} />
       {activeCandidate ? (
-        <CandidateView candidate={activeCandidate} onUpdate={updateCandidate} onArchive={archiveCandidate} selfScores={state.selfScores} />
+        <CandidateView key={activeCandidate.id} candidate={activeCandidate} onUpdate={updateCandidate} onArchive={archiveCandidate} selfScores={state.selfScores} />
       ) : (
         <EmptyState />
       )}
