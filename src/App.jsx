@@ -459,16 +459,65 @@ function ProfileTab({ candidate, onUpdate, onArchive }) {
       </div>
 
       <SectionLabel>POSITION MANAGEMENT</SectionLabel>
-      <div style={{ display: "flex", gap: 12 }}>
-        {candidate.status === "active" ? (
-          <>
-            <button onClick={() => onArchive(candidate.id, "exited")} style={{ ...buttonStyle, background: "#B84A2E", color: "#FFF" }}>EXIT POSITION</button>
-            <button onClick={() => onArchive(candidate.id, "committed")} style={{ ...buttonStyle, background: "#1A6B5E", color: "#FFF" }}>COMMIT — STOP TESTING</button>
-          </>
-        ) : (
+      {candidate.status === "active" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {candidate.currentPhase < 5 && (
+            <div style={{ background: "#EAF0F8", border: "1px solid #D0DCF0", padding: 16, borderRadius: 4 }}>
+              <div style={{ fontFamily: "Calibri", fontSize: 11, color: "#1B2A4A", letterSpacing: 1, fontWeight: "bold", marginBottom: 6 }}>PHASE ADVANCEMENT</div>
+              <div style={{ fontFamily: "Calibri", fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                Gate decisions belong in the <strong style={{ color: "#1B2A4A" }}>Phase & Criteria tab</strong> once your observation window has elapsed. Confirm or refute the hypothesis there — advancing phases is a deliberate, evidence-based decision, not a profile action.
+              </div>
+              <button
+                onClick={() => {
+                  const nextPhase = candidate.currentPhase + 1;
+                  onUpdate({
+                    ...candidate,
+                    currentPhase: nextPhase,
+                    phaseStartedAt: now(),
+                    phaseHistory: [
+                      ...candidate.phaseHistory.slice(0, -1),
+                      { ...candidate.phaseHistory[candidate.phaseHistory.length - 1], endedAt: now(), verdict: "confirmed" },
+                      { phase: nextPhase, startedAt: now(), endedAt: null, verdict: null },
+                    ],
+                  });
+                }}
+                style={{ ...buttonStyle, background: "#1A6B5E", color: "#FFF" }}
+              >
+                ✓ ADVANCE TO PHASE {candidate.currentPhase + 1}
+              </button>
+            </div>
+          )}
+
+          {candidate.currentPhase === 5 && (
+            <div style={{ background: "#E6F4F1", border: "1px solid #1A6B5E", padding: 16, borderRadius: 4 }}>
+              <div style={{ fontFamily: "Calibri", fontSize: 11, color: "#1A6B5E", letterSpacing: 1, fontWeight: "bold", marginBottom: 6 }}>TERMINAL COMMITMENT</div>
+              <div style={{ fontFamily: "Calibri", fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                Phase 5 confirmed. All five phases cleared. Stop testing — start building. This closes the file and marks the candidate as committed.
+              </div>
+              <button
+                onClick={() => onArchive(candidate.id, "committed")}
+                style={{ ...buttonStyle, background: "#1A6B5E", color: "#FFF" }}
+              >
+                ✓ COMMIT — STOP TESTING
+              </button>
+            </div>
+          )}
+
+          <div style={{ background: "#FDF2EE", border: "1px solid #B84A2E", padding: 16, borderRadius: 4 }}>
+            <div style={{ fontFamily: "Calibri", fontSize: 11, color: "#B84A2E", letterSpacing: 1, fontWeight: "bold", marginBottom: 6 }}>EXIT POSITION</div>
+            <div style={{ fontFamily: "Calibri", fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+              Refutation confirmed or position no longer viable. Exit cleanly. File moves to archive. Emotional capital reallocated.
+            </div>
+            <button onClick={() => onArchive(candidate.id, "exited")} style={{ ...buttonStyle, background: "#B84A2E", color: "#FFF" }}>
+              ✕ EXIT POSITION
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 12 }}>
           <button onClick={() => onArchive(candidate.id, "active")} style={{ ...buttonStyle, background: "#1B2A4A", color: "#FFF" }}>REACTIVATE</button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
